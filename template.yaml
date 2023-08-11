@@ -1,0 +1,390 @@
+Resources:
+  MainHandlerServiceRole74C86798:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/MainHandler/ServiceRole/Resource
+  MainHandlerServiceRoleDefaultPolicy730129F6:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - AccountInfo07D3EEDA
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: MainHandlerServiceRoleDefaultPolicy730129F6
+      Roles:
+        - Ref: MainHandlerServiceRole74C86798
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/MainHandler/ServiceRole/DefaultPolicy/Resource
+  MainHandler0B2856CD:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
+        S3Key: 2f7e1429b8d62f8072dc0b52e6897cab1a1575c65a27bfd105b23889a420da5f.jar
+      Handler: scheduler.lambda.App::handleRequest
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+          - MainHandlerServiceRole74C86798
+          - Arn
+      Runtime: java11
+      Timeout: 300
+    DependsOn:
+      - MainHandlerServiceRoleDefaultPolicy730129F6
+      - MainHandlerServiceRole74C86798
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/MainHandler/Resource
+      aws:asset:path: /Users/gshaamzn/Documents/work/scheduler-lambda/app/build/libs/app-uber.jar
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  AccountInfo07D3EEDA:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: accountId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: accountId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/AccountInfo/Resource
+  schedulerendpoint889F65A1:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: scheduler-endpoint
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Resource
+  schedulerendpointDeployment40DB4535971e704249ad50cebb9d77eeef25feaf:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Automatically created by the RestApi construct
+      RestApiId:
+        Ref: schedulerendpoint889F65A1
+    DependsOn:
+      - schedulerendpointproxyANY00F51C53
+      - schedulerendpointproxy5F63C30B
+      - schedulerendpointANYEB0A3179
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Deployment/Resource
+  schedulerendpointDeploymentStageprodDA29131F:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId:
+        Ref: schedulerendpointDeployment40DB4535971e704249ad50cebb9d77eeef25feaf
+      RestApiId:
+        Ref: schedulerendpoint889F65A1
+      StageName: prod
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/DeploymentStage.prod/Resource
+  schedulerendpointproxy5F63C30B:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - schedulerendpoint889F65A1
+          - RootResourceId
+      PathPart: "{proxy+}"
+      RestApiId:
+        Ref: schedulerendpoint889F65A1
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/{proxy+}/Resource
+  schedulerendpointproxyANYApiPermissionSchedulerLambdaCdkStackschedulerendpoint166AA18CANYproxy3A016097:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - MainHandler0B2856CD
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: schedulerendpoint889F65A1
+            - /
+            - Ref: schedulerendpointDeploymentStageprodDA29131F
+            - /*/*
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/{proxy+}/ANY/ApiPermission.SchedulerLambdaCdkStackschedulerendpoint166AA18C.ANY..{proxy+}
+  schedulerendpointproxyANYApiPermissionTestSchedulerLambdaCdkStackschedulerendpoint166AA18CANYproxy3FD02C75:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - MainHandler0B2856CD
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: schedulerendpoint889F65A1
+            - /test-invoke-stage/*/*
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/{proxy+}/ANY/ApiPermission.Test.SchedulerLambdaCdkStackschedulerendpoint166AA18C.ANY..{proxy+}
+  schedulerendpointproxyANY00F51C53:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - MainHandler0B2856CD
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: schedulerendpointproxy5F63C30B
+      RestApiId:
+        Ref: schedulerendpoint889F65A1
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/{proxy+}/ANY/Resource
+  schedulerendpointANYApiPermissionSchedulerLambdaCdkStackschedulerendpoint166AA18CANY4FEE6B55:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - MainHandler0B2856CD
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: schedulerendpoint889F65A1
+            - /
+            - Ref: schedulerendpointDeploymentStageprodDA29131F
+            - /*/
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/ANY/ApiPermission.SchedulerLambdaCdkStackschedulerendpoint166AA18C.ANY..
+  schedulerendpointANYApiPermissionTestSchedulerLambdaCdkStackschedulerendpoint166AA18CANY848F3CF5:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - MainHandler0B2856CD
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: schedulerendpoint889F65A1
+            - /test-invoke-stage/*/
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/ANY/ApiPermission.Test.SchedulerLambdaCdkStackschedulerendpoint166AA18C.ANY..
+  schedulerendpointANYEB0A3179:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - MainHandler0B2856CD
+                  - Arn
+              - /invocations
+      ResourceId:
+        Fn::GetAtt:
+          - schedulerendpoint889F65A1
+          - RootResourceId
+      RestApiId:
+        Ref: schedulerendpoint889F65A1
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/scheduler-endpoint/Default/ANY/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/1WQwU7DMAyGn4V7GqahSXDchjiBVhXuk5uYzmuTVI3DqKq+O0k60Dj58x/7t+O1fHySqzu4+ELptuioltM7g2pFlI5TB6bWIKeXYBWTs2L/aW+5xMGQ9zGbBYGRU+U6TA85lq4jNea6TLPwD0fwHtnLbQoxl7ugWuQdeBR6tGCcjit8QL34ZJgF9NQA4wVGOb3mnSr0vO0pz7riM/adGw1aTupNFj/UZLcFYr0Lg8I8sxzc9/irXN0WfkM+OZ2kheb5r1Pk7ZMb2SZVHAL3gf+1R947q4nzcazTKM/+/mu9kpt48LMnKoZgmQzKaok/CyA+vowBAAA=
+    Metadata:
+      aws:cdk:path: SchedulerLambdaCdkStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Outputs:
+  schedulerendpointEndpointF0501510:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: schedulerendpoint889F65A1
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: schedulerendpointDeploymentStageprodDA29131F
+          - /
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
