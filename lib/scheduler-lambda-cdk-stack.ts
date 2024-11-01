@@ -14,7 +14,7 @@ export class SchedulerLambdaCdkStack extends Stack {
 
     const mainHandler = new lambda.Function(this, 'MainHandler', {
       runtime: lambda.Runtime.JAVA_11,
-      code: lambda.Code.fromAsset('/Users/gshaamzn/Documents/work/scheduler-lambda/app/build/libs/app-uber.jar'),
+      code: lambda.Code.fromAsset('/Users/gshaamzn/Documents/gym-man/gym-management/app/build/libs/app-uber.jar'),
       handler: 'scheduler.lambda.App::handleRequest',
       timeout: Duration.minutes(5),
       memorySize: 1024,
